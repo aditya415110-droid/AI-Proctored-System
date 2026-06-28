@@ -7,7 +7,7 @@ import { Box, Card } from '@mui/material';
 import swal from 'sweetalert';
 import { UploadClient } from '@uploadcare/upload-client';
 
-const client = new UploadClient({ publicKey: '278c8ebd9968212700ae' });
+const client = new UploadClient({ publicKey: process.env.REACT_APP_UPLOADCARE_PUBLIC_KEY });
 
 export default function Home({ cheatingLog, updateCheatingLog }) {
   const webcamRef = useRef(null);
