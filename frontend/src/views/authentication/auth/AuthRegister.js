@@ -3,9 +3,10 @@ import { Box, Typography, Button, Select, MenuItem } from '@mui/material';
 
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
 import { Stack } from '@mui/system';
+import FaceCapture from './FaceCapture';
 
 const AuthRegister = ({ formik, title, subtitle, subtext }) => {
-  const { values, errors, touched, handleBlur, handleChange, handleSubmit } = formik;
+  const { values, errors, touched, handleBlur, handleChange, handleSubmit, setFieldValue } = formik;
   return (
     <>
       {title ? (
@@ -150,31 +151,42 @@ const AuthRegister = ({ formik, title, subtitle, subtext }) => {
             <MenuItem value="teacher">Teacher</MenuItem>
           </Select>
 
-          <Typography
-            variant="subtitle1"
-            fontWeight={600}
-            component="label"
-            htmlFor="teacherUniqueCode"
-            mb="5px"
-            mt="10px"
-          >
-            Enter Unique Code
-          </Typography>
-          <CustomTextField
-            id="teacherUniqueCode"
-            name="teacherUniqueCode"
-            variant="outlined"
-            value={values.teacherUniqueCode}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={touched.teacherUniqueCode && errors.teacherUniqueCode ? true : false}
-            helperText={
-              touched.teacherUniqueCode && errors.teacherUniqueCode
-                ? errors.teacherUniqueCode
-                : 'Required only for teacher accounts'
-            }
-            fullWidth
-          />
+          {values.role === 'student' && (
+            <FaceCapture
+              onCapture={(descriptor) => setFieldValue('faceDescriptor', descriptor)}
+              value={values.faceDescriptor}
+            />
+          )}
+
+          {values.role === 'teacher' && (
+            <>
+              <Typography
+                variant="subtitle1"
+                fontWeight={600}
+                component="label"
+                htmlFor="teacherUniqueCode"
+                mb="5px"
+                mt="10px"
+              >
+                Enter Unique Code
+              </Typography>
+              <CustomTextField
+                id="teacherUniqueCode"
+                name="teacherUniqueCode"
+                variant="outlined"
+                value={values.teacherUniqueCode}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.teacherUniqueCode && errors.teacherUniqueCode ? true : false}
+                helperText={
+                  touched.teacherUniqueCode && errors.teacherUniqueCode
+                    ? errors.teacherUniqueCode
+                    : 'Required only for teacher accounts'
+                }
+                fullWidth
+              />
+            </>
+          )}
         </Stack>
         <Button
           // size="small"

@@ -14,6 +14,7 @@ const authUser = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      faceDescriptor: user.faceDescriptor,
       password_encrypted: user.password,
       message: "User Successfully login with role: " + user.role,
     });
@@ -24,7 +25,7 @@ const authUser = asyncHandler(async (req, res) => {
 });
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, role, teacherUniqueCode } = req.body;
+  const { name, email, password, role, teacherUniqueCode, faceDescriptor } = req.body;
   const expectedTeacherCode = process.env.TEACHER_UNIQUE_CODE || "415110";
 
   if (role === "teacher") {
@@ -46,6 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     password,
     role,
+    faceDescriptor,
   });
 
   if (user) {
@@ -56,6 +58,7 @@ const registerUser = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      faceDescriptor: user.faceDescriptor,
       password_encrypted: user.password,
       message: "User Successfully created with role: " + user.role,
     });
@@ -81,6 +84,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
     name: req.user.name,
     email: req.user.email,
     role: req.user.role,
+    faceDescriptor: req.user.faceDescriptor,
   };
   res.status(200).json(user);
 });
@@ -103,6 +107,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
+      faceDescriptor: updatedUser.faceDescriptor,
     });
   } else {
     res.status(404);

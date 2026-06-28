@@ -21,6 +21,10 @@ const userSchema = mongoose.Schema(
       type: String,
       require: true,
     },
+    faceDescriptor: {
+      type: [Number],
+      required: false,
+    },
   },
   {
     timestamps: true,

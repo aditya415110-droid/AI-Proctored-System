@@ -45,6 +45,7 @@ const initialUserValues = {
   confirm_password: '',
   role: 'student',
   teacherUniqueCode: '',
+  faceDescriptor: null,
 };
 
 const Register = () => {
@@ -73,7 +74,7 @@ const Register = () => {
     e.preventDefault();
   };
 
-  const handleSubmit = async ({ name, email, password, confirm_password, role, teacherUniqueCode }) => {
+  const handleSubmit = async ({ name, email, password, confirm_password, role, teacherUniqueCode, faceDescriptor }) => {
     if (password !== confirm_password) {
       toast.error('Passwords do not match');
       return;
@@ -84,8 +85,13 @@ const Register = () => {
       return;
     }
 
+    if (role === 'student' && (!faceDescriptor || faceDescriptor.length === 0)) {
+      toast.error('Please capture your face profile first.');
+      return;
+    }
+
     try {
-      const res = await register({ name, email, password, role, teacherUniqueCode }).unwrap();
+      const res = await register({ name, email, password, role, teacherUniqueCode, faceDescriptor }).unwrap();
       dispatch(setCredentials({ ...res }));
       formik.resetForm();
 

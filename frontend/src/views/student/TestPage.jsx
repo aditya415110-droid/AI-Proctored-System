@@ -6,6 +6,7 @@ import BlankCard from 'src/components/shared/BlankCard';
 import MultipleChoiceQuestion from './Components/MultipleChoiceQuestion';
 import NumberOfQuestions from './Components/NumberOfQuestions';
 import WebCam from './Components/WebCam';
+import FaceVerification from './Components/FaceVerification';
 import { useGetExamsQuery, useGetQuestionsQuery } from '../../slices/examApiSlice';
 import { useSaveCheatingLogMutation } from 'src/slices/cheatingLogApiSlice';
 import { useSelector } from 'react-redux';
@@ -22,6 +23,7 @@ const TestPage = () => {
   const [saveCheatingLogMutation] = useSaveCheatingLogMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMcqCompleted, setIsMcqCompleted] = useState(false);
+  const [faceVerified, setFaceVerified] = useState(false);
 
   useEffect(() => {
     if (userExamdata) {
@@ -102,6 +104,19 @@ const TestPage = () => {
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
       </Box>
+    );
+  }
+
+  const isStudent = userInfo && userInfo.role === 'student';
+  if (isStudent && !faceVerified) {
+    return (
+      <PageContainer title="Face Verification" description="Verify your identity to start the exam">
+        <FaceVerification
+          storedDescriptor={userInfo?.faceDescriptor}
+          userInfo={userInfo}
+          onVerificationSuccess={() => setFaceVerified(true)}
+        />
+      </PageContainer>
     );
   }
 
