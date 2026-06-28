@@ -7,14 +7,17 @@ import {
   FormControlLabel,
   Grid,
   List,
-  ListItem,
   ListItemText,
-  Radio,
   Stack,
   Typography,
 } from '@mui/material';
 import Paper from '@mui/material/Paper';
 import { useNavigate, useParams } from 'react-router';
+import { useSelector } from 'react-redux';
+import { useCheatingLog } from 'src/context/CheatingLogContext';
+import { useSaveCheatingLogMutation } from 'src/slices/cheatingLogApiSlice';
+import { toast } from 'react-toastify';
+import ProctoringEnforcer from '../../components/ProctoringEnforcer';
 
 const CodeDetailsMore = () => {
   const [certify, setCertify] = useState(false);
@@ -23,12 +26,46 @@ const CodeDetailsMore = () => {
     setCertify(!certify);
   };
   const { examId } = useParams();
+  const { userInfo } = useSelector((state) => state.auth);
+  const { cheatingLog } = useCheatingLog();
+  const [saveCheatingLogMutation] = useSaveCheatingLogMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isStudent = userInfo?.role === 'student';
+
+  const handleAutoSubmit = async () => {
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      const currentSwitches = parseInt(sessionStorage.getItem('tabSwitchCount'), 10) || 0;
+      const updatedLog = {
+        ...cheatingLog,
+        username: userInfo.name,
+        email: userInfo.email,
+        examId: examId,
+        noFaceCount: parseInt(cheatingLog.noFaceCount) || 0,
+        multipleFaceCount: parseInt(cheatingLog.multipleFaceCount) || 0,
+        cellPhoneCount: parseInt(cheatingLog.cellPhoneCount) || 0,
+        prohibitedObjectCount: parseInt(cheatingLog.prohibitedObjectCount) || 0,
+        tabSwitchCount: currentSwitches,
+      };
+      await saveCheatingLogMutation(updatedLog).unwrap();
+      toast.error('Test automatically submitted due to multiple tab switches.');
+      navigate('/Success');
+    } catch (error) {
+      console.error('Error saving cheating log:', error);
+      navigate('/Success');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   function handleCodeTest() {
     navigate(`/exam/${examId}/code`);
   }
   return (
     <div>
+      {isStudent && <ProctoringEnforcer onAutoSubmit={handleAutoSubmit} />}
       <Card>
         <CardContent>
           <Typography variant="h2" mb={3}>

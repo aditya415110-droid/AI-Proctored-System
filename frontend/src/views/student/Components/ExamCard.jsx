@@ -52,7 +52,16 @@ export default function ExamCard({ exam }) {
 
           <Stack direction="row" alignItems="center" justifyContent="space-between" mt={1}>
             <Typography variant="h6">{totalQuestions} ques</Typography>
-            <Typography color="textSecondary">{duration}</Typography>
+            {userInfo?.role === 'student' && exam.attemptsAllowed !== undefined && (
+              <Typography
+                variant="body2"
+                fontWeight={600}
+                color={exam.attemptsCount >= exam.attemptsAllowed ? 'error.main' : 'primary.main'}
+              >
+                Attempts: {exam.attemptsCount}/{exam.attemptsAllowed}
+              </Typography>
+            )}
+            <Typography color="textSecondary">{duration} mins</Typography>
           </Stack>
         </CardContent>
       </CardActionArea>

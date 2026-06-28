@@ -18,6 +18,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router';
 import { useCheatingLog } from 'src/context/CheatingLogContext';
+import ProctoringEnforcer from '../../components/ProctoringEnforcer';
 
 export default function Coder() {
   const [code, setCode] = useState('// Write your code here...');
@@ -31,6 +32,7 @@ export default function Coder() {
   const { userInfo } = useSelector((state) => state.auth);
   const { cheatingLog, updateCheatingLog } = useCheatingLog();
   const [saveCheatingLogMutation] = useSaveCheatingLogMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (userInfo) {
@@ -109,7 +111,10 @@ export default function Coder() {
       return;
     }
 
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true);
       // First submit the code
       const codeSubmissionData = {
         code,
@@ -127,6 +132,7 @@ export default function Coder() {
       if (response.data.success) {
         try {
           const logSnapshot = structuredClone(cheatingLog); // ✅ correct place
+          const currentSwitches = parseInt(sessionStorage.getItem('tabSwitchCount'), 10) || 0;
 
           const updatedLog = {
             username: userInfo.name,
@@ -137,6 +143,7 @@ export default function Coder() {
             multipleFaceCount: Number(logSnapshot.multipleFaceCount || 0),
             cellPhoneCount: Number(logSnapshot.cellPhoneCount || 0),
             prohibitedObjectCount: Number(logSnapshot.prohibitedObjectCount || 0),
+            tabSwitchCount: currentSwitches,
 
             screenshots: [...(logSnapshot.screenshots ?? [])],
           };
@@ -144,11 +151,6 @@ export default function Coder() {
           console.log("FINAL LOG:", updatedLog);
 
           await saveCheatingLogMutation(updatedLog).unwrap();
-
-          // Save the cheating log
-          const logResult = await saveCheatingLogMutation(updatedLog).unwrap();
-          console.log('Cheating log saved successfully:', logResult);
-
           toast.success('Test submitted successfully!');
           navigate('/success');
         } catch (cheatingLogError) {
@@ -165,11 +167,63 @@ export default function Coder() {
       toast.error(
         error?.response?.data?.message || error?.data?.message || 'Failed to submit test',
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handleAutoSubmit = async () => {
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      // Attempt to submit current code first
+      if (questionId) {
+        const codeSubmissionData = {
+          code,
+          language,
+          questionId,
+        };
+        await axiosInstance.post('/api/coding/submit', codeSubmissionData, {
+          withCredentials: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error auto-submitting code:', error);
+    }
+
+    try {
+      const logSnapshot = structuredClone(cheatingLog);
+      const currentSwitches = parseInt(sessionStorage.getItem('tabSwitchCount'), 10) || 0;
+      const updatedLog = {
+        username: userInfo.name,
+        email: userInfo.email,
+        examId,
+
+        noFaceCount: Number(logSnapshot.noFaceCount || 0),
+        multipleFaceCount: Number(logSnapshot.multipleFaceCount || 0),
+        cellPhoneCount: Number(logSnapshot.cellPhoneCount || 0),
+        prohibitedObjectCount: Number(logSnapshot.prohibitedObjectCount || 0),
+        tabSwitchCount: currentSwitches,
+
+        screenshots: [...(logSnapshot.screenshots ?? [])],
+      };
+      await saveCheatingLogMutation(updatedLog).unwrap();
+      toast.error('Test automatically submitted due to multiple tab switches.');
+      navigate('/success');
+    } catch (error) {
+      console.error('Error saving cheating log:', error);
+      navigate('/success');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isStudent = userInfo && userInfo.role === 'student';
+
   return (
     <Box sx={{ p: 3, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {isStudent && <ProctoringEnforcer onAutoSubmit={handleAutoSubmit} />}
       {isLoading ? (
         <Box sx={{ textAlign: 'center', p: 3 }}>Loading question...</Box>
       ) : !question ? (

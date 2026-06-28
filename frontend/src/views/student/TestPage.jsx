@@ -12,6 +12,8 @@ import { useSaveCheatingLogMutation } from 'src/slices/cheatingLogApiSlice';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useCheatingLog } from 'src/context/CheatingLogContext';
+import ProctoringEnforcer from '../../components/ProctoringEnforcer';
+import axiosInstance from '../../axios';
 
 const TestPage = () => {
   const { examId, testId } = useParams();
@@ -24,6 +26,7 @@ const TestPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMcqCompleted, setIsMcqCompleted] = useState(false);
   const [faceVerified, setFaceVerified] = useState(false);
+  const [answers, setAnswers] = useState(new Map());
 
   useEffect(() => {
     if (userExamdata) {
@@ -42,6 +45,18 @@ const TestPage = () => {
   const [score, setScore] = useState(0);
   const navigate = useNavigate();
 
+  const isStudent = userInfo && userInfo.role === 'student';
+  const attemptsCount = selectedExam?.attemptsCount || 0;
+  const attemptsAllowed = selectedExam?.attemptsAllowed || 1;
+  const isAttemptsExceeded = isStudent && attemptsCount >= attemptsAllowed;
+
+  useEffect(() => {
+    if (isAttemptsExceeded) {
+      toast.error('You have reached the maximum allowed attempts for this exam.');
+      navigate('/Success');
+    }
+  }, [isAttemptsExceeded, navigate]);
+
   useEffect(() => {
     if (data) {
       setQuestions(data);
@@ -49,10 +64,10 @@ const TestPage = () => {
   }, [data]);
 
   useEffect(() => {
-  if (examId) {
-    updateCheatingLog({ examId });
-  }
-}, [examId]);
+    if (examId) {
+      updateCheatingLog({ examId });
+    }
+  }, [examId]);
 
   const handleMcqCompletion = () => {
     setIsMcqCompleted(true);
@@ -65,6 +80,7 @@ const TestPage = () => {
     try {
       setIsSubmitting(true);
 
+      const currentSwitches = parseInt(sessionStorage.getItem('tabSwitchCount'), 10) || 0;
       // Make sure we have the latest user info in the log
       const updatedLog = {
         ...cheatingLog,
@@ -75,6 +91,7 @@ const TestPage = () => {
         multipleFaceCount: parseInt(cheatingLog.multipleFaceCount) || 0,
         cellPhoneCount: parseInt(cheatingLog.cellPhoneCount) || 0,
         prohibitedObjectCount: parseInt(cheatingLog.prohibitedObjectCount) || 0,
+        tabSwitchCount: currentSwitches,
       };
 
       console.log('Submitting cheating log:', updatedLog);
@@ -95,6 +112,49 @@ const TestPage = () => {
     }
   };
 
+  const handleAutoSubmit = async () => {
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      const answersObject = Object.fromEntries(answers);
+      await axiosInstance.post(
+        '/api/users/results',
+        {
+          examId,
+          answers: answersObject,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+    } catch (error) {
+      console.error('Error auto-saving results:', error);
+    }
+
+    try {
+      const currentSwitches = parseInt(sessionStorage.getItem('tabSwitchCount'), 10) || 0;
+      const updatedLog = {
+        ...cheatingLog,
+        username: userInfo.name,
+        email: userInfo.email,
+        examId: examId,
+        noFaceCount: parseInt(cheatingLog.noFaceCount) || 0,
+        multipleFaceCount: parseInt(cheatingLog.multipleFaceCount) || 0,
+        cellPhoneCount: parseInt(cheatingLog.cellPhoneCount) || 0,
+        prohibitedObjectCount: parseInt(cheatingLog.prohibitedObjectCount) || 0,
+        tabSwitchCount: currentSwitches,
+      };
+      await saveCheatingLogMutation(updatedLog).unwrap();
+      toast.error('Test automatically submitted due to multiple tab switches.');
+      navigate('/Success');
+    } catch (error) {
+      console.error('Error saving cheating log:', error);
+      navigate('/Success');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const saveUserTestScore = () => {
     setScore(score + 1);
   };
@@ -107,7 +167,6 @@ const TestPage = () => {
     );
   }
 
-  const isStudent = userInfo && userInfo.role === 'student';
   if (isStudent && !faceVerified) {
     return (
       <PageContainer title="Face Verification" description="Verify your identity to start the exam">
@@ -122,6 +181,7 @@ const TestPage = () => {
 
   return (
     <PageContainer title="TestPage" description="This is TestPage">
+      {isStudent && faceVerified && <ProctoringEnforcer onAutoSubmit={handleAutoSubmit} />}
       <Box pt="3rem">
         <Grid container spacing={3}>
           <Grid item xs={12} md={7} lg={7}>
@@ -142,6 +202,8 @@ const TestPage = () => {
                     submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
                     questions={data}
                     saveUserTestScore={saveUserTestScore}
+                    answers={answers}
+                    setAnswers={setAnswers}
                   />
                 )}
               </Box>

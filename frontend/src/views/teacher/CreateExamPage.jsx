@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid, Box, Card, Typography } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import ExamForm from './components/ExamForm';
@@ -34,6 +34,20 @@ const examValidationSchema = yup.object({
 const CreateExamPage = () => {
   const { userInfo } = useSelector((state) => state.auth);
   const [createExam, { isLoading }] = useCreateExamMutation();
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data } = await axiosInstance.get('/api/users/students');
+        setStudents(data);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        toast.error('Failed to load students list');
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const initialExamValues = {
     examName: '',
@@ -45,6 +59,7 @@ const CreateExamPage = () => {
       question: '',
       description: '',
     },
+    assignedStudents: [],
   };
 
   const handleSubmit = async (values) => {
@@ -137,6 +152,7 @@ const CreateExamPage = () => {
             <Card elevation={9} sx={{ p: 4, zIndex: 1, width: '100%', maxWidth: '800px' }}>
               <ExamForm
                 formik={formik}
+                students={students}
                 title={
                   <Typography variant="h3" textAlign="center" color="textPrimary" mb={1}>
                     Create Exam

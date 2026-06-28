@@ -114,10 +114,16 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     throw new Error("User Not Found");
   }
 });
+const getStudents = asyncHandler(async (req, res) => {
+  const students = await User.find({ role: "student" }).select("name email _id");
+  res.status(200).json(students);
+});
+
 export {
   authUser,
   registerUser,
   logoutUser,
   getUserProfile,
   updateUserProfile,
+  getStudents,
 };

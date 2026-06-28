@@ -29,6 +29,27 @@ const examSchema = mongoose.Schema(
       default: uuidv4, // Generate a new UUID for each document
       unique: true, // Ensure uniqueness of UUIDs
     },
+    assignedStudents: [
+      {
+        studentId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        studentEmail: {
+          type: String,
+          required: true,
+        },
+        studentName: {
+          type: String,
+          required: true,
+        },
+        attemptsAllowed: {
+          type: Number,
+          default: 1,
+        },
+      }
+    ],
   },
   {
     timestamps: true,

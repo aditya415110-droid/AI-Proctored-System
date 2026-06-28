@@ -10,6 +10,7 @@ export const CheatingLogProvider = ({ children }) => {
     multipleFaceCount: 0,
     cellPhoneCount: 0,
     prohibitedObjectCount: 0,
+    tabSwitchCount: 0,
     examId: '',
     username: userInfo?.name || '',
     email: userInfo?.email || '',
@@ -41,6 +42,7 @@ export const CheatingLogProvider = ({ children }) => {
           prohibitedObjectCount: Number(
             delta.prohibitedObjectCount ?? prev.prohibitedObjectCount ?? 0,
           ),
+          tabSwitchCount: Number(delta.tabSwitchCount ?? prev.tabSwitchCount ?? 0),
 
           screenshots: delta.screenshots ?? prev.screenshots ?? [],
         };
@@ -59,6 +61,7 @@ export const CheatingLogProvider = ({ children }) => {
           prohibitedObjectCount: Number(
             newLog.prohibitedObjectCount ?? prev.prohibitedObjectCount ?? 0,
           ),
+          tabSwitchCount: Number(newLog.tabSwitchCount ?? prev.tabSwitchCount ?? 0),
 
           screenshots: newLog.screenshots ?? prev.screenshots ?? [], // ✅ FIX
         };
@@ -74,6 +77,7 @@ export const CheatingLogProvider = ({ children }) => {
       multipleFaceCount: 0,
       cellPhoneCount: 0,
       prohibitedObjectCount: 0,
+      tabSwitchCount: 0,
       examId,
       username: userInfo?.name || '',
       email: userInfo?.email || '',

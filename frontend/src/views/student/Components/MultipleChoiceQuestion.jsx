@@ -16,11 +16,10 @@ import { useNavigate, useParams } from 'react-router';
 import axiosInstance from '../../../axios';
 import { toast } from 'react-toastify';
 
-export default function MultipleChoiceQuestion({ questions, saveUserTestScore, submitTest }) {
+export default function MultipleChoiceQuestion({ questions, saveUserTestScore, submitTest, answers, setAnswers }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [score, setScore] = useState(0);
-  const [answers, setAnswers] = useState(new Map());
   const navigate = useNavigate();
   const { examId } = useParams();
 

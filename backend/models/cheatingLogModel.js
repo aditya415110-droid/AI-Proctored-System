@@ -7,6 +7,7 @@ const cheatingLogSchema = new mongoose.Schema(
     multipleFaceCount: { type: Number, default: 0 },
     cellPhoneCount: { type: Number, default: 0 },
     prohibitedObjectCount: { type: Number, default: 0 },
+    tabSwitchCount: { type: Number, default: 0 },
 
     examId: { type: String, required: true },
     email: { type: String, required: true },

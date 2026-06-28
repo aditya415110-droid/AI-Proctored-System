@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Card,
   CardContent,
@@ -19,7 +20,8 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useGetQuestionsQuery } from 'src/slices/examApiSlice';
+import { useGetQuestionsQuery, useGetExamsQuery } from 'src/slices/examApiSlice';
+import { useSelector } from 'react-redux';
 
 function Copyright(props) {
   return (
@@ -39,7 +41,15 @@ const DescriptionAndInstructions = () => {
 
   const { examId } = useParams();
   const { data: questions, isLoading } = useGetQuestionsQuery(examId); // Fetch questions using examId
-  // const { data: questions, isLoading } = useGetQuestionsQuery({ examId });
+  const { data: userExamdata, isLoading: isExamsLoading } = useGetExamsQuery();
+  const { userInfo } = useSelector((state) => state.auth);
+
+  const exam = userExamdata?.find((e) => e.examId === examId);
+
+  const isStudent = userInfo?.role === 'student';
+  const attemptsCount = exam?.attemptsCount || 0;
+  const attemptsAllowed = exam?.attemptsAllowed || 1;
+  const isAttemptsExceeded = isStudent && attemptsCount >= attemptsAllowed;
 
   // fech exam data from backend
   // pass testUnique id on start button
@@ -50,11 +60,31 @@ const DescriptionAndInstructions = () => {
     setCertify(!certify);
   };
   const handleTest = () => {
+    if (isAttemptsExceeded) {
+      toast.error('You have reached the maximum allowed attempts for this exam.');
+      return;
+    }
     // Check if the test date is valid here
     const isValid = true; // Replace with your date validation logic
     console.log('Test link');
     if (isValid) {
-      // Replace 'examid' and 'TestId' with the actual values
+      // Reset tab switch count
+      sessionStorage.setItem('tabSwitchCount', '0');
+
+      // Request fullscreen
+      const element = document.documentElement;
+      if (element.requestFullscreen) {
+        element.requestFullscreen().catch((err) => {
+          console.error("Error entering fullscreen:", err);
+        });
+      } else if (element.mozRequestFullScreen) {
+        element.mozRequestFullScreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      }
+
       navigate(`/exam/${examId}/${testId}`);
     } else {
       // Display an error message or handle invalid date
@@ -169,12 +199,28 @@ const DescriptionAndInstructions = () => {
           cancellation of your test.
         </Typography>
         <Stack direction="column" alignItems="center" spacing={3}>
+          {isStudent && exam && (
+            <Box textAlign="center" mb={2}>
+              <Typography variant="h5" color={isAttemptsExceeded ? 'error.main' : 'text.primary'}>
+                Attempts Used: {attemptsCount} / {attemptsAllowed}
+              </Typography>
+              {isAttemptsExceeded ? (
+                <Typography variant="body2" color="error.main" fontWeight={600} mt={1}>
+                  🚫 You have reached the maximum allowed attempts for this exam.
+                </Typography>
+              ) : (
+                <Typography variant="body2" color="text.secondary" mt={0.5}>
+                  You have {attemptsAllowed - attemptsCount} remaining attempt(s).
+                </Typography>
+              )}
+            </Box>
+          )}
           <FormControlLabel
-            control={<Checkbox checked={certify} onChange={handleCertifyChange} color="primary" />}
+            control={<Checkbox checked={certify} disabled={isAttemptsExceeded} onChange={handleCertifyChange} color="primary" />}
             label="I certify that I have carefully read and agree to all of the instructions mentioned above"
           />
           <div style={{ display: 'flex', padding: '2px', margin: '10px' }}>
-            <Button variant="contained" color="primary" disabled={!certify} onClick={handleTest}>
+            <Button variant="contained" color="primary" disabled={!certify || isAttemptsExceeded} onClick={handleTest}>
               Start Test
             </Button>
           </div>
