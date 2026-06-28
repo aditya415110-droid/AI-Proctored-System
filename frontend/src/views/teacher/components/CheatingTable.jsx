@@ -47,7 +47,7 @@ export default function CheatingTable() {
   // IMPORTANT: your working CDN host (auto derived fallback)
   const CDN_BASE = 'https://2c4f6r8c52.ucarecd.net';
 
-  return `${CDN_BASE}/${fileId}/-/preview/640x480/`;
+  return `${CDN_BASE}/${fileId}/`;
 };
   const [filter, setFilter] = useState('');
   const [selectedExamId, setSelectedExamId] = useState('');

@@ -27,23 +27,45 @@ export const CheatingLogProvider = ({ children }) => {
   }, [userInfo]);
 
   const updateCheatingLog = (newLog) => {
-    setCheatingLog((prev) => {
-      const updated = {
-        ...prev,
-        ...newLog,
+    // Support both object merges and functional updaters to avoid stale state issues
+    if (typeof newLog === 'function') {
+      setCheatingLog((prev) => {
+        const delta = newLog(prev) || {};
+        const updated = {
+          ...prev,
+          ...delta,
 
-        noFaceCount: Number(newLog.noFaceCount ?? prev.noFaceCount ?? 0),
-        multipleFaceCount: Number(newLog.multipleFaceCount ?? prev.multipleFaceCount ?? 0),
-        cellPhoneCount: Number(newLog.cellPhoneCount ?? prev.cellPhoneCount ?? 0),
-        prohibitedObjectCount: Number(
-          newLog.prohibitedObjectCount ?? prev.prohibitedObjectCount ?? 0,
-        ),
+          noFaceCount: Number(delta.noFaceCount ?? prev.noFaceCount ?? 0),
+          multipleFaceCount: Number(delta.multipleFaceCount ?? prev.multipleFaceCount ?? 0),
+          cellPhoneCount: Number(delta.cellPhoneCount ?? prev.cellPhoneCount ?? 0),
+          prohibitedObjectCount: Number(
+            delta.prohibitedObjectCount ?? prev.prohibitedObjectCount ?? 0,
+          ),
 
-        screenshots: newLog.screenshots ?? prev.screenshots ?? [], // ✅ FIX
-      };
+          screenshots: delta.screenshots ?? prev.screenshots ?? [],
+        };
 
-      return updated;
-    });
+        return updated;
+      });
+    } else {
+      setCheatingLog((prev) => {
+        const updated = {
+          ...prev,
+          ...newLog,
+
+          noFaceCount: Number(newLog.noFaceCount ?? prev.noFaceCount ?? 0),
+          multipleFaceCount: Number(newLog.multipleFaceCount ?? prev.multipleFaceCount ?? 0),
+          cellPhoneCount: Number(newLog.cellPhoneCount ?? prev.cellPhoneCount ?? 0),
+          prohibitedObjectCount: Number(
+            newLog.prohibitedObjectCount ?? prev.prohibitedObjectCount ?? 0,
+          ),
+
+          screenshots: newLog.screenshots ?? prev.screenshots ?? [], // ✅ FIX
+        };
+
+        return updated;
+      });
+    }
   };
 
   const resetCheatingLog = (examId) => {

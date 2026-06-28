@@ -54,8 +54,6 @@ const TestPage = () => {
 
   const handleMcqCompletion = () => {
     setIsMcqCompleted(true);
-    // Reset cheating log for coding exam
-    resetCheatingLog(examId);
     navigate(`/exam/${examId}/codedetails`);
   };
 

@@ -7,7 +7,7 @@ import { Box, Card } from '@mui/material';
 import swal from 'sweetalert';
 import { UploadClient } from '@uploadcare/upload-client';
 
-const client = new UploadClient({ publicKey: process.env.REACT_APP_UPLOADCARE_PUBLIC_KEY });
+const client = new UploadClient({ publicKey: '278c8ebd9968212700ae' });
 
 export default function Home({ cheatingLog, updateCheatingLog }) {
   const webcamRef = useRef(null);
@@ -76,15 +76,19 @@ export default function Home({ cheatingLog, updateCheatingLog }) {
       const screenshot = await captureScreenshotAndUpload(type);
       
       if (screenshot) {
-        // Update cheating log with new count and screenshot
-        const updatedLog = {
-          ...cheatingLog,
-          [`${type}Count`]: (cheatingLog[`${type}Count`] || 0) + 1,
-          screenshots: [...(cheatingLog.screenshots || []), screenshot]
-        };
+        // Update cheating log using functional updater to avoid stale state
+        setScreenshots((prev) => [...prev, screenshot]);
 
-        console.log('Updating cheating log with:', updatedLog);
-        updateCheatingLog(updatedLog);
+        updateCheatingLog((prev) => {
+          const updated = {
+            ...prev,
+            [`${type}Count`]: (prev[`${type}Count`] || 0) + 1,
+            screenshots: [...(prev.screenshots || []), screenshot],
+          };
+
+          console.log('Updating cheating log with:', updated);
+          return updated;
+        });
       }
 
       switch (type) {
